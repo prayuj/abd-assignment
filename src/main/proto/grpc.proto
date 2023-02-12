@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+// option java_multiple_files = true;
+option java_package = "edu.sjsu.cs249.abd";
+
+service ABDService {
+    rpc name(NameRequest) returns (NameResponse);
+    rpc enableRequests(EnableRequest) returns (EnableResponse);
+    rpc read1(Read1Request) returns (Read1Response);
+    rpc read2(Read2Request) returns (Read2Response);
+    rpc write(WriteRequest) returns (WriteResponse);
+    // causes the server to immediately exit
+    rpc exit(ExitRequest) returns (ExitResponse);
+}
+
+package abd;
+
+message NameRequest {
+}
+
+message NameResponse {
+    // name of the student running the server
+    string name = 1;
+}
+
+message EnableRequest {
+    bool read1 = 1; // if false, ignore read1 requests
+    bool read2 = 2; // if false, ignore read2 requests
+    bool write = 3; // if false, ignore write requests
+}
+
+message EnableResponse {
+}
+
+message Read1Request {
+    uint64 addr = 1;
+}
+
+message Read1Response {
+    int32 rc = 1; // 0 - success, 1 - addr does not exist
+    uint64 label = 2;
+    uint64 value = 3;
+}
+
+message Read2Request {
+    uint64 addr = 1;
+    uint64 label = 2;
+    uint64 value = 3;
+}
+
+message Read2Response {
+}
+
+message WriteResponse {
+}
+
+message WriteRequest {
+    uint64 addr = 1;
+    uint64 label = 2;
+    uint64 value = 3;
+}
+
+message ExitRequest {
+}
+
+message ExitResponse {
+}
