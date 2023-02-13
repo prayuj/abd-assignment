@@ -17,13 +17,13 @@ public class ClientService {
 
     public void asyncWriteToRegister(long register, long value, String[] serverList) throws InterruptedException {
         final CountDownLatch finishLatch = new CountDownLatch(serverList.length / 2 + 1);
+        var writeRequest =Grpc.WriteRequest.newBuilder()
+                .setAddr(register)
+                .setLabel(System.currentTimeMillis())
+                .setValue(value)
+                .build();
         for (String server: serverList) {
             logger.log(Level.INFO, server + ": Going to write `"+value+"` to "+register);
-            var writeRequest =Grpc.WriteRequest.newBuilder()
-                    .setAddr(register)
-                    .setLabel(System.currentTimeMillis())
-                    .setValue(value)
-                    .build();
             var channel = this.createChannel(server);
             var stub = ABDServiceGrpc.newStub(channel);
             StreamObserver<WriteResponse> responseObserver = new StreamObserver<WriteResponse>() {
