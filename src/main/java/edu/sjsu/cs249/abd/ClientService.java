@@ -58,29 +58,31 @@ public class ClientService {
     public void asyncReadFromRegister(long register, String[] serverList) throws Exception {
         final CountDownLatch read1Latch = new CountDownLatch(serverList.length / 2 + 1);
         List<long[]> values = new ArrayList<>();
+        var read1Request = Grpc.Read1Request.newBuilder()
+                .setAddr(register)
+                .build();
         for (String server: serverList) {
-            logger.log(Level.INFO, server + ": Going to read register `"+register);
-            var read1Request = Grpc.Read1Request.newBuilder()
-                    .setAddr(register)
-                    .build();
+            logger.log(Level.INFO, server + ": Going to read register "+register);
             var channel = this.createChannel(server);
             var stub = ABDServiceGrpc.newStub(channel);
             StreamObserver<Read1Response> responseObserver = new StreamObserver<Read1Response>() {
                 @Override
                 public void onNext(Read1Response value) {
-                    logger.log(Level.INFO, server + ": Received: `"+value);
-                    values.add(new long[]{value.getLabel(), value.getValue()});
+                    logger.log(Level.INFO, server + ": Received: " + value);
+                    if (value.getRc() == 0) {
+                        values.add(new long[]{value.getLabel(), value.getValue()});
+                        read1Latch.countDown();
+                    }
                 }
                 @Override
                 public void onError(Throwable cause) {
-                    channel.shutdownNow();
                     logger.log(Level.WARNING, server + ": Error occurred while reading, cause " + cause.getMessage());
+                    channel.shutdownNow();
                 }
                 @Override
                 public void onCompleted() {
-                    channel.shutdownNow();
                     logger.log(Level.INFO, server + ": Stream completed");
-                    read1Latch.countDown();
+                    channel.shutdownNow();
                 }
             };
             stub.read1(read1Request, responseObserver);
@@ -92,7 +94,7 @@ public class ClientService {
             logger.log(Level.SEVERE, ex.getMessage());
         }
         if (read1Latch.getCount() != 0) {
-            logger.log(Level.SEVERE, "READ request did not write to a majority during r1!");
+            logger.log(Level.SEVERE, "READ request did not read from a majority during r1!");
             return;
         }
 
@@ -105,14 +107,14 @@ public class ClientService {
             }
         }
 
+        var read2Request = Grpc.Read2Request.newBuilder()
+                .setAddr(register)
+                .setLabel(maximumLabel)
+                .setValue(bestValue)
+                .build();
         final CountDownLatch read2Latch = new CountDownLatch(serverList.length / 2 + 1);
         for (String server: serverList) {
-            logger.log(Level.INFO, server + ": Going to perform read2 on register `"+register);
-            var read2Request = Grpc.Read2Request.newBuilder()
-                    .setAddr(register)
-                    .setLabel(maximumLabel)
-                    .setValue(bestValue)
-                    .build();
+            logger.log(Level.INFO, server + ": Going to perform read2 on register "+register);
             var channel = this.createChannel(server);
             var stub = ABDServiceGrpc.newStub(channel);
             StreamObserver<Read2Response> responseObserver = new StreamObserver<Read2Response>() {
@@ -122,15 +124,15 @@ public class ClientService {
 
                 @Override
                 public void onError(Throwable cause) {
+                    logger.log(Level.WARNING, server + ": Error occurred while reading, cause " + cause.getMessage());
                     channel.shutdownNow();
-                    System.out.println("Error occurred for server "+ server +", cause " + cause.getMessage());
                 }
 
                 @Override
                 public void onCompleted() {
-                    channel.shutdownNow();
                     logger.log(Level.INFO, server + ": Stream completed");
                     read2Latch.countDown();
+                    channel.shutdownNow();
                 }
             };
             stub.read2(read2Request, responseObserver);
@@ -146,6 +148,17 @@ public class ClientService {
 //            logger.log(Level.SEVERE, "READ request did not write to a majority during r2!");
 //        }
 
+    }
+    public void enableServers(boolean write, boolean read1, boolean read2, String[] serverList) {
+        for (String server: serverList) {
+            logger.log(Level.INFO, server + ": sending enable request.");
+            var enableRequest = Grpc.EnableRequest.newBuilder()
+                    .setWrite(write)
+                    .setRead1(read1)
+                    .setRead2(read2).build();
+            var stub = ABDServiceGrpc.newBlockingStub(createChannel(server));
+            stub.enableRequests(enableRequest);
+        }
     }
     private io.grpc.ManagedChannel createChannel(String serverAddress){
         var lastColon = serverAddress.lastIndexOf(':');
