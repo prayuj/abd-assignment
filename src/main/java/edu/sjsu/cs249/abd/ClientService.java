@@ -164,11 +164,10 @@ public class ClientService {
         var lastColon = serverAddress.lastIndexOf(':');
         var host = serverAddress.substring(0, lastColon);
         var port = Integer.parseInt(serverAddress.substring(lastColon+1));
-        var channel = ManagedChannelBuilder
+        return ManagedChannelBuilder
                 .forAddress(host, port)
                 .usePlaintext()
                 .build();
-        return channel;
     }
 
 
