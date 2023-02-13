@@ -55,8 +55,6 @@ public class ServerService extends edu.sjsu.cs249.abd.ABDServiceGrpc.ABDServiceI
             data.put("label", request.getLabel());
             this.registers.put(request.getAddr(),data);
             printRegisterValues();
-            responseObserver.onNext(Read2Response.newBuilder().build());
-            responseObserver.onCompleted();
         } else {
             HashMap<String,Long> storedData = this.registers.get(registerAddress);
             long storedDataLabel = storedData.get("label");
@@ -65,11 +63,8 @@ public class ServerService extends edu.sjsu.cs249.abd.ABDServiceGrpc.ABDServiceI
                 data.put("label", label);
                 this.registers.put(registerAddress,data);
                 printRegisterValues();
-                responseObserver.onNext(Read2Response.newBuilder().build());
-                responseObserver.onCompleted();
             }
         }
-        // TODO: do servers who have latest values return ack?
         responseObserver.onNext(Read2Response.newBuilder().build());
         responseObserver.onCompleted();
     }
