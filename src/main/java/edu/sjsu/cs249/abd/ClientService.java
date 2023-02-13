@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ClientService {
-    private static Logger logger = Logger.getLogger(ClientService.class.getName());
+    private static final Logger logger = Logger.getLogger(ClientService.class.getName());
 
     public void asyncWriteToRegister(long register, long value, String[] serverList) throws InterruptedException {
         final CountDownLatch finishLatch = new CountDownLatch(serverList.length / 2 + 1);
@@ -26,7 +26,7 @@ public class ClientService {
             logger.log(Level.INFO, server + ": Going to write `"+value+"` to "+register);
             var channel = this.createChannel(server);
             var stub = ABDServiceGrpc.newStub(channel);
-            StreamObserver<WriteResponse> responseObserver = new StreamObserver<WriteResponse>() {
+            StreamObserver<WriteResponse> responseObserver = new StreamObserver<>() {
                 @Override
                 public void onNext(WriteResponse value) {
                 }
@@ -50,12 +50,11 @@ public class ClientService {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, ex.getMessage());
         }
-        finishLatch.await(3, TimeUnit.SECONDS);
         if (finishLatch.getCount()!=0) {
             logger.log(Level.SEVERE, "WRITE request did not write to a majority!");
         }
     }
-    public void asyncReadFromRegister(long register, String[] serverList) throws Exception {
+    public void asyncReadFromRegister(long register, String[] serverList) {
         final CountDownLatch read1Latch = new CountDownLatch(serverList.length / 2 + 1);
         List<long[]> values = new ArrayList<>();
         var read1Request = Grpc.Read1Request.newBuilder()
@@ -65,7 +64,7 @@ public class ClientService {
             logger.log(Level.INFO, server + ": Going to read register "+register);
             var channel = this.createChannel(server);
             var stub = ABDServiceGrpc.newStub(channel);
-            StreamObserver<Read1Response> responseObserver = new StreamObserver<Read1Response>() {
+            StreamObserver<Read1Response> responseObserver = new StreamObserver<>() {
                 @Override
                 public void onNext(Read1Response value) {
                     logger.log(Level.INFO, server + ": Received: " + value);
@@ -117,7 +116,7 @@ public class ClientService {
             logger.log(Level.INFO, server + ": Going to perform read2 on register "+register);
             var channel = this.createChannel(server);
             var stub = ABDServiceGrpc.newStub(channel);
-            StreamObserver<Read2Response> responseObserver = new StreamObserver<Read2Response>() {
+            StreamObserver<Read2Response> responseObserver = new StreamObserver<>() {
                 @Override
                 public void onNext(Read2Response value) {
                 }
