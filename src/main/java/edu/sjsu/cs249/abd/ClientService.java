@@ -44,6 +44,12 @@ public class ClientService {
             };
             stub.write(writeRequest, responseObserver);
         }
+        try {
+            if (!(finishLatch.await(3, TimeUnit.SECONDS)))
+                logger.log(Level.SEVERE, "write request timeout to some/all servers!");
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, ex.getMessage());
+        }
         finishLatch.await(3, TimeUnit.SECONDS);
         if (finishLatch.getCount()!=0) {
             logger.log(Level.SEVERE, "WRITE request did not write to a majority!");
@@ -79,8 +85,12 @@ public class ClientService {
             };
             stub.read1(read1Request, responseObserver);
         }
-        read1Latch.await(3, TimeUnit.SECONDS);
-
+        try {
+            if (!(read1Latch.await(3, TimeUnit.SECONDS)))
+                logger.log(Level.SEVERE, "read1 request timeout to some/all servers!");
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, ex.getMessage());
+        }
         if (read1Latch.getCount() != 0) {
             logger.log(Level.SEVERE, "READ request did not write to a majority during r1!");
             return;
@@ -125,10 +135,16 @@ public class ClientService {
             };
             stub.read2(read2Request, responseObserver);
         }
-        read2Latch.await(3, TimeUnit.SECONDS);
-        if (read2Latch.getCount() != 0) {
-            logger.log(Level.SEVERE, "READ request did not write to a majority during r2!");
+        try {
+            if (!(read2Latch.await(3, TimeUnit.SECONDS)))
+                logger.log(Level.SEVERE, "read2 request timeout to some/all servers!");
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, ex.getMessage());
         }
+        // TODO: do servers who have latest values return ack?
+//        if (read2Latch.getCount() != 0) {
+//            logger.log(Level.SEVERE, "READ request did not write to a majority during r2!");
+//        }
 
     }
     private io.grpc.ManagedChannel createChannel(String serverAddress){
