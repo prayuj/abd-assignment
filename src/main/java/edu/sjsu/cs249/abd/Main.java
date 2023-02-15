@@ -11,7 +11,7 @@ import picocli.CommandLine.Spec;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
-
+import java.util.logging.Level;
 
 
 public class Main {
@@ -47,10 +47,12 @@ public class Main {
         @Parameters(index = "0", description = "comma separated list of servers to use.")
         String servers;
 
+        @Option(names = "--debug", description = "Flag for Log level info") boolean debug;
+
         @Command
         public void read(@Parameters(paramLabel = "register") long register) throws Exception {
             String[] serversList = servers.split(",");
-            new ClientService().asyncReadFromRegister(register, serversList);
+            new ClientService().asyncReadFromRegister(register, serversList, debug ? Level.ALL : Level.OFF);
         }
 
         @Command
@@ -58,7 +60,7 @@ public class Main {
                           @Parameters(paramLabel = "value") long value) throws InterruptedException {
 
             String[] serversList = servers.split(",");
-            new ClientService().asyncWriteToRegister(register, value, serversList);
+            new ClientService().asyncWriteToRegister(register, value, serversList, debug ? Level.ALL : Level.OFF);
 
         }
     }

@@ -49,7 +49,6 @@ public class ServerService extends edu.sjsu.cs249.abd.ABDServiceGrpc.ABDServiceI
         long label = request.getLabel();
         long value = request.getValue();
         HashMap<String,Long> data = new HashMap<>();
-
         if (!this.registers.containsKey(registerAddress)) {
             data.put("value", request.getValue());
             data.put("label", request.getLabel());
