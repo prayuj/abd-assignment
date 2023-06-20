@@ -6,10 +6,14 @@ import javax.naming.Name;
 import java.util.HashMap;
 
 public class ServerService extends edu.sjsu.cs249.abd.ABDServiceGrpc.ABDServiceImplBase{
-    HashMap<Long,HashMap<String,Long>> registers = new HashMap<>();
+    HashMap<Long,HashMap<String,Long>> registers;
     boolean write = true;
     boolean read1 = true;
     boolean read2 = true;
+
+    ServerService() {
+        registers = new HashMap<>();
+    }
     @Override
     public void write(WriteRequest request, StreamObserver<WriteResponse> responseObserver){
         if (!this.write) return;
@@ -30,7 +34,7 @@ public class ServerService extends edu.sjsu.cs249.abd.ABDServiceGrpc.ABDServiceI
                     .setRc(1)
                     .build());
             responseObserver.onCompleted();
-            return;
+
         }
         HashMap<String,Long> data = this.registers.get(registerAddress);
         long value = data.get("value");

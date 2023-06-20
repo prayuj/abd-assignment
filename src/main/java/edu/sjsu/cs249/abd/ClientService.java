@@ -50,9 +50,11 @@ public class ClientService {
             stub.write(writeRequest, responseObserver);
         }
         try {
-            if (!(finishLatch.await(3, TimeUnit.SECONDS)))
+            if (!(finishLatch.await(3, TimeUnit.SECONDS))) {
                 logger.log(Level.SEVERE, "write request timeout to some/all servers!");
                 System.out.println("failure");
+                return;
+            }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, ex.getMessage());
             System.out.println("failure");
